@@ -7,27 +7,37 @@ import type { TransferApp } from "./banks";
  * 계좌번호 복사는 호출하는 쪽에서 먼저 끝낸 뒤 이 함수를 부른다.
  */
 
-/**
- * 안드로이드 Chrome의 intent: URL.
- * 앱이 설치돼 있으면 바로 열리고, 없으면 browser_fallback_url(Play 스토어)로 넘어간다.
- * 커스텀 스킴과 달리 "열 수 없는 주소" 오류창이 뜨지 않는다.
- */
-export function androidIntentUrl(app: TransferApp): string {
-  const fallback = `https://play.google.com/store/apps/details?id=${app.androidPackage}`;
-  return (
-    "intent://#Intent" +
-    ";package=" + app.androidPackage +
-    ";S.browser_fallback_url=" + encodeURIComponent(fallback) +
-    ";end"
-  );
+export function playStoreUrl(app: TransferApp): string {
+  return `https://play.google.com/store/apps/details?id=${app.androidPackage}`;
 }
 
 export function iosStoreUrl(app: TransferApp): string {
   return `https://apps.apple.com/kr/app/id${app.iosAppId}`;
 }
 
-export function playStoreUrl(app: TransferApp): string {
-  return `https://play.google.com/store/apps/details?id=${app.androidPackage}`;
+/**
+ * 안드로이드 Chrome의 intent: URL.
+ *
+ * Chrome은 대상 액티비티에 BROWSABLE 카테고리가 있을 때만 웹에서 앱을 실행한다.
+ * 앱의 런처 액티비티에는 보통 BROWSABLE이 없으므로 패키지명만으로는 열리지 않는다.
+ * 앱이 등록한 스킴을 함께 넘겨야 BROWSABLE 필터에 걸린다.
+ *
+ * 스킴을 모르면 null을 돌려준다. 그때는 호출부가 Play 스토어로 보낸다.
+ * 억지로 intent를 만들어 봐야 폴백만 타면서 지연만 생긴다.
+ */
+export function androidIntentUrl(app: TransferApp): string | null {
+  if (!app.scheme) return null;
+  return (
+    "intent://#Intent" +
+    ";scheme=" + app.scheme +
+    ";package=" + app.androidPackage +
+    ";S.browser_fallback_url=" + encodeURIComponent(playStoreUrl(app)) +
+    ";end"
+  );
+}
+
+export function iosSchemeUrl(app: TransferApp): string | null {
+  return app.scheme ? `${app.scheme}://` : null;
 }
 
 export type Platform = "android" | "ios" | "other";
@@ -47,15 +57,16 @@ export function openTransferApp(app: TransferApp): void {
   const platform = detectPlatform(navigator.userAgent, navigator.maxTouchPoints);
 
   if (platform === "android") {
-    window.location.href = androidIntentUrl(app);
+    // intent:는 앱 미설치 시 browser_fallback_url로 알아서 넘어간다.
+    window.location.href = androidIntentUrl(app) ?? playStoreUrl(app);
     return;
   }
 
   if (platform === "ios") {
     const store = iosStoreUrl(app);
+    const scheme = iosSchemeUrl(app);
 
-    // 스킴을 모르는 앱은 곧장 App Store로 보낸다 (설치돼 있으면 "열기"가 보인다).
-    if (!app.iosScheme) {
+    if (!scheme) {
       window.location.href = store;
       return;
     }
@@ -73,7 +84,7 @@ export function openTransferApp(app: TransferApp): void {
     document.addEventListener("visibilitychange", cancel);
     window.addEventListener("pagehide", cancel);
 
-    window.location.href = app.iosScheme;
+    window.location.href = scheme;
     return;
   }
 

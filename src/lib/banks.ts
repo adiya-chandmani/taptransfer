@@ -21,8 +21,14 @@ export const BANKS = [
  * 실제 송금은 사용자가 앱 안에서 직접 진행한다 (PRD 25장).
  *
  * androidPackage / iosAppId 는 Play 스토어와 App Store 조회로 확인한 값이다.
- * iosScheme 은 원격에서 확인할 수 없어 실기기 테스트가 필요하다. 값이 없으면
- * iOS에서는 App Store 페이지로 보낸다 (설치돼 있으면 "열기" 버튼이 보인다).
+ *
+ * scheme 은 앱이 등록한 커스텀 URL 스킴이다. Android/iOS 모두 이 값으로 앱을 연다.
+ * Chrome은 대상 액티비티에 BROWSABLE 카테고리가 있어야만 웹에서 앱을 실행하므로,
+ * 패키지명만으로는 부족하고 스킴이 함께 있어야 한다.
+ *
+ * ponytail: 스킴은 앱 바이너리 안에 있어 원격으로 확인할 수 없다. 실기기에서
+ * 직접 눌러 확인해야 하고, 확인된 것만 여기에 채운다. 값이 없으면 앱을 여는 대신
+ * 스토어로 보낸다 (설치돼 있으면 "열기" 버튼이 보이므로 탭 한 번이 더 든다).
  */
 export type TransferApp = {
   name: string;
@@ -32,8 +38,8 @@ export type TransferApp = {
   androidPackage: string;
   /** App Store 숫자 id */
   iosAppId: string;
-  /** iOS 커스텀 스킴. 실기기 확인 전까지는 토스만 채워 둔다. */
-  iosScheme?: string;
+  /** 앱이 등록한 커스텀 URL 스킴 (":" 와 "//" 없이). 실기기로 확인된 것만 채운다. */
+  scheme?: string;
 };
 
 export const TOSS: TransferApp = {
@@ -41,7 +47,7 @@ export const TOSS: TransferApp = {
   web: "https://toss.im",
   androidPackage: "viva.republica.toss",
   iosAppId: "839333328",
-  iosScheme: "supertoss://",
+  scheme: "supertoss",
 };
 
 export const BANK_APPS: TransferApp[] = [
