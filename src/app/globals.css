@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* PRD 35장: 흰색 중심, 금융 서비스 느낌, 높은 가독성, 모바일 퍼스트. */
+@theme {
+  --color-brand: #2b6cff;
+  --color-brand-dark: #1b4fd1;
+  --color-ink: #111418;
+  --color-muted: #6b7280;
+  --color-line: #e5e7eb;
+}
+
+html {
+  /* PRD 34장: 웹폰트를 받지 않는다. 시스템 폰트만 사용해 첫 화면을 빠르게 띄운다. */
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard",
+    "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink);
+}
+
+/* PRD 9장: 클립보드 API가 없는 구형 브라우저에서 길게 눌러 직접 선택할 수 있어야 한다. */
+.selectable {
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
